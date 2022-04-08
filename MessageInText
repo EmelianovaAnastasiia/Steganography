@@ -1,0 +1,146 @@
+print('Какой из методов нужно использовать?')
+method = int(input())
+print('Введите сообщение для встраивания')
+message = input()
+hidden = ''
+for j in message:
+    a = str(bin(ord(j)))[2:]
+    b = ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0']
+    for i in range(0, len(a)):
+        b[len(b) - len(a) + i] = a[i]
+    b = ''.join(b)
+    hidden = hidden + b
+print(hidden)
+
+
+def method1(hidden):
+    container = open('C:\\Users\\Admin\\PycharmProjects\\STEGO_lab1\\container.txt', 'r', encoding='utf-8')
+    result = open('C:\\Users\\Admin\\PycharmProjects\\STEGO_lab1\\result.txt', 'w', encoding='utf-8')
+    text = container.read()
+    t = 0
+    a = False
+    for j in range(len(text)):
+        if not a and text[j] == 'а' and hidden[t] == '0':
+            result.write('a')
+            t+=1
+        elif not a and text[j] == 'р' and hidden[t] == '1':
+            result.write('p')
+            t+=1
+        else:
+            result.write(text[j])
+        if t == len(hidden):
+            a = True
+    container.close()
+    result.close()
+
+def method1_reverse(hidden):
+    result = open('C:\\Users\\Admin\\PycharmProjects\\STEGO_lab1\\result.txt', 'r', encoding='utf-8')
+    text = result.read()
+    message1 = ''
+    for j in range(len(text)):
+        if text[j] == 'a':
+            message1 += '0'
+        elif text[j] == 'p':
+            message1 += '1'
+    result.close()
+    print(message1)
+    message2 = ''
+    for i in range(len(message1) // 11):
+        message2 += chr(int(message1[:11], 2))
+        message1 = message1[11:]
+    print(message2)
+
+def method2(hidden):
+    container = open('C:\\Users\\Admin\\PycharmProjects\\STEGO_lab1\\container.txt', 'r', encoding='utf-8')
+    result = open('C:\\Users\\Admin\\PycharmProjects\\STEGO_lab1\\result.txt', 'w', encoding='utf-8')
+    text = container.read()
+    t = 0
+    a = False
+    for j in range(len(text)):
+        if text[j] == ' ':
+            if not a and hidden[t] == '0':
+                result.write(' ')
+                t+=1
+            elif not a and hidden[t] == '1':
+                result.write('  ')
+                t+=1
+            else:
+                result.write(text[j])
+        else:
+            result.write(text[j])
+        if t == len(hidden):
+            a = True
+    container.close()
+    result.close()
+
+
+def method2_reverse(hidden):
+    result = open('C:\\Users\\Admin\\PycharmProjects\\STEGO_lab1\\result.txt', 'r', encoding='utf-8')
+    text = result.read()
+    message1 = ''
+    for j in range(len(text)):
+        if text[j] == ' ' and text[j+1] == ' ':
+            message1 += '1'
+        elif text[j] == ' ' and text[j-1] != ' ' and text[j+1] != ' ':
+            message1 += '0'
+    result.close()
+    print(message1)
+    message2 = ''
+    for i in range(len(message1) // 11):
+        message2 += chr(int(message1[:11], 2))
+        message1 = message1[11:]
+    print(message2)
+
+
+def method3(hidden):
+    container = open('C:\\Users\\Admin\\PycharmProjects\\STEGO_lab1\\container.txt', 'r', encoding='utf-8')
+    result = open('C:\\Users\\Admin\\PycharmProjects\\STEGO_lab1\\result.txt', 'w', encoding='utf-8')
+    text = container.read()
+    t = 0
+    a = False
+    for j in range(len(text)):
+        if not a and text[j] == '—':
+            if hidden[t] == '1':
+                result.write('--')
+                t+=1
+            elif hidden[t] == '0':
+                result.write(text[j])
+                t+=1
+        else:
+            result.write(text[j])
+        if t == len(hidden):
+            a = True
+    container.close()
+    result.close()
+
+def method3_reverse(hidden):
+    result = open('C:\\Users\\Admin\\PycharmProjects\\STEGO_lab1\\result.txt', 'r', encoding='utf-8')
+    text = result.read()
+    message1 = ''
+    for j in range(len(text)):
+        if text[j] == '—':
+            message1 += '0'
+        elif text[j] == '-' and text[j+1] == '-':
+            message1 += '1'
+    result.close()
+    print(message1)
+    message2 = ''
+    for i in range(len(message1) // 11):
+        message2 += chr(int(message1[:11], 2))
+        message1 = message1[11:]
+    print(message2)
+
+
+if method == 1:
+    method1(hidden)
+elif method == 2:
+    method2(hidden)
+elif method == 3:
+    method3(hidden)
+elif method == 4:
+    method1_reverse(hidden)
+elif method == 5:
+    method2_reverse(hidden)
+elif method == 6:
+    method3_reverse(hidden)
+
