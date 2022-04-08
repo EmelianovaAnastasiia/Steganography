@@ -1,0 +1,111 @@
+import os
+import sys
+
+def enter():
+    while True:
+        choose = int(input("Выберите действие: 1 - встроить, 2 - извлечь, 3 - выйти\n"))
+        if choose == 1:
+            encode()
+        elif choose == 2:
+            decode()
+        elif choose == 3:
+            break
+
+
+header = 54          #    размер заголовка изображение
+
+def encode():               #  функция, встраивающая сообщение в изображение
+
+    numberofbits = int(input("Введите количество бит для дальнейшей замены (1/2/4):\n"))
+    message_size = os.stat('C:\\Users\\Admin\\PycharmProjects\\STEGO_lab2\\message.txt').st_size
+    image_size = os.stat('C:\\Users\\Admin\\PycharmProjects\\STEGO_lab2\\imagesample.bmp').st_size
+
+    if message_size >= (image_size * numberofbits / 8 - header):
+       print("Сообщение слишком большое")
+       return
+
+    message = open('C:\\Users\\Admin\\PycharmProjects\\STEGO_lab2\\message.txt', 'r')
+    imagesample = open('C:\\Users\\Admin\\PycharmProjects\\STEGO_lab2\\imagesample.bmp', 'rb')
+    result = open('C:\\Users\\Admin\\PycharmProjects\\STEGO_lab2\\result.bmp', 'wb')
+
+    bmp_header = imagesample.read(header)
+    result.write(bmp_header)
+
+
+    message_mask,image_mask = mask(numberofbits)
+    print("message mask: {0:b}, image mask: {1:b}".format(message_mask, image_mask))
+    print(bin(0b11111111 & message_mask))
+    print(bin(0b11111111 & image_mask))
+
+    while True:
+        symbol = message.read(1)
+        if not symbol:
+            break
+
+        #print("symbol: {0}, binsymbol: {1:b}".format(symbol, ord(symbol)))
+        symbol = ord(symbol)
+
+        for numberofbytes in range (0, 8, numberofbits):
+            image_byte = int.from_bytes(imagesample.read(1), sys.byteorder) & image_mask
+            message_byte = symbol & message_mask
+            message_byte >>= (8 - numberofbits)
+
+            image_byte |= message_byte
+            result.write(image_byte.to_bytes(1, sys.byteorder))
+
+            symbol <<= numberofbits
+
+
+
+    result.write(imagesample.read())
+
+    message.close()
+    imagesample.close()
+    result.close()
+
+def decode():
+    numberofbits = int(input("Введите количество бит для дальнейшей замены (1/2/4):\n"))
+    numberofsymbols = int(input("Сколько символов требуется раскодировать?\n"))
+
+    image_size = os.stat('C:\\Users\\Admin\\PycharmProjects\\STEGO_lab2\\result.bmp').st_size
+    if numberofsymbols >= (image_size * numberofbits / 8 - header):
+       print("Сообщение слишком большое")
+       return
+
+    hidden = open('C:\\Users\\Admin\\PycharmProjects\\STEGO_lab2\\hidden.txt', 'w', encoding='utf-8')
+    hiddenimg = open('C:\\Users\\Admin\\PycharmProjects\\STEGO_lab2\\result.bmp', 'rb')
+
+    hiddenimg.seek(54)
+    message_mask, image_mask = mask(numberofbits)
+    image_mask = ~image_mask
+
+    done = 0
+    while done < numberofsymbols:
+        symbol = 0
+
+        for symbolsdone in range (0, 8, numberofbits):
+            image_byte = int.from_bytes(hiddenimg.read(1), sys.byteorder) & image_mask
+            symbol <<= numberofbits
+            symbol |= image_byte
+
+        #print("Символ под номером {0} это {1:c} или {1:b}".format(done, symbol))
+        done += 1
+
+        hidden.write(chr(symbol))
+
+    hidden.close()
+    hiddenimg.close()
+
+def mask(numberofbits):
+    message_mask = 0b11111111
+    image_mask = 0b11111111
+
+    message_mask <<= (8 - numberofbits)
+    message_mask %= 256
+    image_mask >>= numberofbits
+    image_mask <<= numberofbits
+
+    return message_mask, image_mask
+
+enter()
+
